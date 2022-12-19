@@ -1,24 +1,27 @@
 import process, {argv} from 'node:process'
-import {fileURLToPath} from "node:url";
-import path from "node:path";
 import {cpus} from "../handlers/cpuInfo.js";
 import {eol} from "../handlers/eol.js";
 import {homedir} from "../handlers/homedir.js";
 import {user} from "../handlers/username.js";
 import {architecture} from "../handlers/arch.js";
+import os from "os";
+import {listFiles} from "../handlers/fs/listFiles.js";
+import {upCommand} from "../handlers/fs/upNav.js";
 
 const userName = argv[2].split('=')[1].trim(" ")
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename)
+let currDir = os.homedir()
+const printCurDir = () => {
+    console.log(`You are currently in ${currDir}`)
+}
 const main = async () => {
     console.log(`Welcome to the File Manager, ${userName}`)
-    console.log(`You are currently in ${__dirname}`)
+    printCurDir()
 
     process.stdin.setEncoding('utf-8');
     process.stdin.resume();
 
 
-    process.stdin.on('data', (chunk) => {
+    process.stdin.on('data', async (chunk) => {
         // console.log(`Received ${chunk.length} bytes of data.`);
         // process.stdout.write(chunk)
         if (chunk.toString().match('.exit')) {
@@ -32,13 +35,16 @@ const main = async () => {
             homedir()
         } else if (chunk.toString().match('os --username')) {
             user()
-        }else if (chunk.toString().match('os --architecture')) {
+        } else if (chunk.toString().match('os --architecture')) {
             architecture()
-        }
-
-        else {
+        } else if (chunk.toString().match('ls')) {
+            await listFiles(currDir)
+        } else if (chunk.toString().match('up')) {
+             currDir = upCommand(currDir)
+        }else {
             console.log(`Invalid input`)
         }
+        printCurDir()
 
     });
 
